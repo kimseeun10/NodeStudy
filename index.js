@@ -5,6 +5,7 @@ const port = 5000;
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { User } = require("./models/User");
+const { auth } = require("./middleware/auth");
 
 // application/x-www-from-urlencoded
 app.use(bodyParser.urlencoded({extended: true}));
@@ -24,7 +25,7 @@ mongoose.connect(config.mongoURI, {
 
 app.get('/', (req, res) => res.send('정말 취업하고싶어요. 일하고싶어요.'));
 
-app.post('/', async (req, res) => {
+app.post('/api/users/register', async (req, res) => {
 
     // 회원가입시 필요한 정보들을 client에서 가져오면 데이터베이스에 넣어준다.
     const user = new User(req.body);
@@ -43,7 +44,7 @@ app.post('/', async (req, res) => {
     }
 });
 
-app.post('/login', async (req, res) => {
+app.post('/api/users/login', async (req, res) => {
     try {
         // 1. 요청된 이메일을 데이터베이스에 있는지 찾는다.
         const user = await User.findOne({ email: req.body.email }).exec();
@@ -72,6 +73,35 @@ app.post('/login', async (req, res) => {
             success: false,
             error: err.message,
         });
+    }
+});
+
+app.get('/api/users/auth', auth, (req, res) => {
+    // 여기까지 미들웨어를 통과해 왔다는 얘기는 Authentication 이 True 라는 말.
+
+    res.status(200).json({
+        _id: req.user._id,
+        isAdmin: req.user.role === 0 ? false : true,
+        isAuth: true,
+        email: req.user.email,
+        name: req.user.name,
+        lastname: req.user.lastname,
+        role: req.user.role,
+        image: req.user.image
+    })
+})
+
+app.get('/api/users/logout', auth, async (req, res) => {
+    try {
+        const updatedUser = await User.findOneAndUpdate(
+            { _id: req.user._id },
+            { $set: { token: "" } },
+            { new: true }
+        );
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
 

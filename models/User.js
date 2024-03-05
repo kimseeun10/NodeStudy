@@ -70,6 +70,23 @@ userSchema.methods.generateToken = async function() {
     }
 };
 
+userSchema.statics.findByToken = function(token) {
+    const user = this;
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, 'secretToken', (err, decoded) => {
+        if (err) return reject(err);
+        
+        // 유저 아이디를 이용해서 유저를 찾은 다음에 클라이언트에서 가져온 token과
+        // DB에 보관한 token이 일치하는지 확인
+        user.findOne({ "_id": decoded, "token": token }).then(user => {
+            resolve(user);
+        }).catch(err => {
+            reject(err);
+        });
+    });
+});
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = { User };
