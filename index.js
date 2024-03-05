@@ -10,18 +10,18 @@ const { auth } = require("./middleware/auth");
 // application/x-www-from-urlencoded
 app.use(bodyParser.urlencoded({extended: true}));
 
-// application/json
-app.use(bodyParser.json());
-
-// cookieParser
-app.use(cookieParser());
-
 const mongoose = require('mongoose');
 mongoose.connect(config.mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => console.log('MongoDB Connected...'))
-  .catch(err => console.log(err));
+.catch(err => console.log(err));
+
+// application/json
+app.use(bodyParser.json());
+
+// cookieParser
+app.use(cookieParser());
 
 app.get('/', (req, res) => res.send('정말 취업하고싶어요. 일하고싶어요.'));
 
